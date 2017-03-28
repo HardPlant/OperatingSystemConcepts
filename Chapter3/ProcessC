@@ -1,0 +1,39 @@
+#include <stdio.h>
+#include <windows.h>
+
+HANDLE CreateCustomProcess();
+
+int main(int argc, char* argv[])
+{
+  int input[4];
+  int i;
+  
+  STARTUPINFO si_A, si_B;
+  PROCESS_INFORMATION pi_A, pi_B;
+  
+  for(i=0;i<4;i++)
+  {
+    
+  }
+  CreateProcessB();
+  CreateProcessC();
+  
+  printf("PID : %d", GetCurrentProcessId());
+  return 0;
+}
+
+HANDLE CreateProcessB(
+  STARTUPINFO si,
+  PROCESS_INFORMATION pi,
+  TCHAR path)
+{
+  ZeroMemory(&si, sizeof(si));
+  si.cb = sizzeof(si);
+  ZeroMemory(&pi, sizeof(pi));
+  
+  if(!CreateProcess())
+  {
+    fprintf();
+  }
+  
+}
