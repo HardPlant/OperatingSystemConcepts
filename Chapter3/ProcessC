@@ -63,3 +63,13 @@ DWORD CreateProcessAndGetPid(
   }
   return pi->dwProcessId;
 }
+
+LPVOID randomSleep()
+{
+    int waittime;
+
+    srand(time(NULL));
+    waittime = rand() % 4096;
+    
+    Sleep(waittime);
+}
