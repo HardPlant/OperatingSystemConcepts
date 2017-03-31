@@ -1,39 +1,65 @@
 #include <stdio.h>
 #include <windows.h>
 
-HANDLE CreateCustomProcess();
+DWORD ExecuteProcess(TCHAR* PATH);
+HANDLE createProcessA();
+HANDLE createProcessB();
+HANDLE createProcessAndGetPid(
+  STARTUPINFO si,
+  PROCESS_INFORMATION pi,
+  TCHAR path);
 
 int main(int argc, char* argv[])
 {
+  TCHAR* ProcAPath = "/max.exe"
+  TCHAR* ProcBPath = "/avg.exe"
   int input[4];
   int i;
-  
-  STARTUPINFO si_A, si_B;
-  PROCESS_INFORMATION pi_A, pi_B;
-  
+  int sum = 0;
+  int ProcAPid = 0;
+  int ProcBPid = 0;
+  BOOL doSleep = FALSE;
+  ProcAPid = ExecuteProcess(ProcAPath);
+  printf("PID : %d", ProcAPid);
+  ProcBPid = ExecuteProcess(ProcBPath);
+  printf("PID : %d", ProcBPid);
+
   for(i=0;i<4;i++)
   {
-    
+      if(doSleep) randomSleep();
+    scanf_s("%d\n", input[i]);
   }
-  CreateProcessB();
-  CreateProcessC();
-  
-  printf("PID : %d", GetCurrentProcessId());
+
+  printf("PID : %d, ", GetCurrentProcessId());
+  for(i=0;i<4;i++)
+    printf("num%d=%d, ", i, input[i]);
+  printf("\n");
+
   return 0;
 }
 
-HANDLE CreateProcessB(
+DWORD ExecuteProcess(TCHAR* PATH)
+{
+  STARTUPINFO si;
+  PROCESS_INFORMATION pi;
+  ZeroMemory(&si, sizeof(si));
+  si.cb = sizeof(si);
+  ZeroMemory(&pi, sizeof(pi));
+
+  DWORD pid = CreateProcessAndGetPid(si, pi, PATH);
+
+  return pid;
+}
+
+DWORD CreateProcessAndGetPid(
   STARTUPINFO si,
   PROCESS_INFORMATION pi,
   TCHAR path)
 {
-  ZeroMemory(&si, sizeof(si));
-  si.cb = sizzeof(si);
-  ZeroMemory(&pi, sizeof(pi));
   
   if(!CreateProcess())
   {
     fprintf();
   }
-  
+  return pi->dwProcessId;
 }
