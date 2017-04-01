@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <stdlib.h>
 
-LPVOID randomSleep();
+void randomSleep();
 
 int main(int argc, char* argv[])
 {
@@ -10,11 +10,10 @@ int main(int argc, char* argv[])
     int i;
     int result = 0;
     BOOL doSleep = FALSE;
-
     for(i=0;i<4;i++)
     {
         if(doSleep) randomSleep();
-        scanf_s("%d\n", input[i]);
+        scanf_s("%d", &input[i]);
     }
     result = input[0];
     for(i=1;i<4;i++)
@@ -25,15 +24,14 @@ int main(int argc, char* argv[])
 
     printf("PID : %d, ", GetCurrentProcessId());
     for(i=0;i<4;i++)
-        printf("num%d=%d, ", i, input[i]);
+        printf("num%d=%d, ", i+1, input[i]);
     printf("result= %d\n ", result);
 
     return 0;
 }
-LPVOID randomSleep()
+void randomSleep()
 {
     int waittime;
-
     srand(time(NULL));
     waittime = rand() % 4096;
     
