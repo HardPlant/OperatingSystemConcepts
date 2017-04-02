@@ -11,17 +11,21 @@
     to forsake this principle and to "waste" resources? Why is such a system
     not really wasteful?
  
-  Moore's law made us hardwares,
+  Moore's law gives us a large amount of empty areas, so we can endure some
+  overhead for good design and management, after-care.
+  and it reduces upkeeps of systems; so it is not so wasteful.
 
 3. What is the main difficulty that a programmer must overcome in writing an
     operating system for a real-time environment?
 
-  time-critical nature
+  time-critical nature pressures OS to make response immediate.
 
 4. Keeping in mind the various definitions of *operating system*, consider
     whether the operating system should include applications such as web
     browsers and mail programs. Argue both that it should and that it should
     not, and support your answers.
+
+  
 
 5. How does the distinction between kernel mode and user mode function
     as a rudimentary form of protection (security) system?
@@ -55,9 +59,13 @@
   and then timer counter goes to zero, interrupt occurs. and ISR will increase
   1 to current time variable of kernel area memory.
 
-10. 
+10. Give two reasons why caches are useful. What problems do they solve?
+    What problems do they cause? If a cache can be made as large as the
+    device for which it is caching (for instance, a cache as large as a disk),
+    why not make it that large and eliminate the device?
 
-11. 
+11. Distinguish between the client-server and peer-to-peer models of
+    distributed systems.
 
 
 ##Exercises
