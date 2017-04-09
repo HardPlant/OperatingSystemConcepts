@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#define CORES 4
+#define NUM_THREAD 4
 typedef struct {
 	int base;
 	int to;
@@ -56,7 +56,6 @@ DWORD WINAPI getNumberOfPrimeThreadFunc(LPVOID lpParam)
 {
 	getNumberOfPrimeArgs* args = lpParam;
 	int result = getNumberOfPrime(args->base, args->to);
-	printf("쓰레드 실행 : %d, %d\n", args->base, args->to);
 	
 	EnterCriticalSection(&primeTotalCritical);
 	g_allPrimes += result;
@@ -67,21 +66,20 @@ DWORD WINAPI getNumberOfPrimeThreadFunc(LPVOID lpParam)
 
 int useThread(int min, int max)
 {
-	//const int CORES = 4;
 	int length = max - min;
-	int sizePerCores = length / CORES;
+	int sizePerCores = length / NUM_THREAD;
 	int i = 0;
 	int result = 0;
-	getNumberOfPrimeArgs* args[CORES];
+	getNumberOfPrimeArgs* args[NUM_THREAD];
 	InitializeCriticalSection(&primeTotalCritical);
 
-	for (i = 0; i < CORES; i++)
+	for (i = 0; i < NUM_THREAD; i++)
 	{
 		args[i] = (getNumberOfPrimeArgs*)malloc(sizeof(getNumberOfPrimeArgs));
 	}
-	HANDLE ThreadHandles[CORES];
+	HANDLE ThreadHandles[NUM_THREAD];
 	int current = min;
-	for (i = 0; i < CORES; i++)
+	for (i = 0; i < NUM_THREAD; i++)
 	{
 		args[i]->base = current+(i*sizePerCores);
 		args[i]->to = current+((i+1)*sizePerCores);
@@ -94,8 +92,8 @@ int useThread(int min, int max)
 			NULL);
 		current++;
 	}
-	WaitForMultipleObjects(CORES, ThreadHandles, TRUE, INFINITE);
-	for (i = 0; i < CORES; i++)
+	WaitForMultipleObjects(NUM_THREAD, ThreadHandles, TRUE, INFINITE);
+	for (i = 0; i < NUM_THREAD; i++)
 	{
 		CloseHandle(ThreadHandles[i]);
 		free(args[i]);
@@ -121,7 +119,6 @@ double testmain(int min, int max)
 		result = getNumberOfPrime(min, max);
 	currenttime = clock();
 	elapsedtime = (double)(currenttime - beforetime) / CLOCKS_PER_SEC;
-	printf("걸린 시간:%lf, 소수의 갯수 : %d\n", elapsedtime, result);
 	
 	return elapsedtime;
 }
@@ -131,13 +128,13 @@ int main(int argc, char* argv[])
 	int min = 0, max = 0;
 	int result = 0;
 	int tries = 0;
-	const int maxtry = 50;
+	const int maxtry = 52;
 	scanf_s("%d", &min);
 	scanf_s("%d", &max);
 	for(tries = 0; tries < maxtry; tries++)
 		elapsedtime += testmain(min, max);
 	
-	printf("걸린 시간 평균:%lf\n", elapsedtime/ maxtry);
+	printf("걸린 시간 평균:%lf, 소수의 개수:%d\n", elapsedtime/ maxtry, g_allPrimes);
 
 	return 0;
 }
