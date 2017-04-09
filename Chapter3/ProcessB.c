@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
     int input[4];
     int i;
     int result = 0;
-    BOOL doSleep = FALSE;
+    BOOL doSleep = TRUE;
     for(i=0;i<4;i++)
     {
         if(doSleep) randomSleep();

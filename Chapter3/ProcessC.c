@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 	int sum = 0;
 	int ProcAPid = 0;
 	int ProcBPid = 0;
-	BOOL doSleep = FALSE;
+	BOOL doSleep = TRUE;
 	ProcAPid = ExecuteProcess(ProcAPath);
 	printf("PID : %d\n", ProcAPid);
 	ProcBPid = ExecuteProcess(ProcBPath);
