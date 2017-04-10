@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#define NUM_THREAD 4
+#define NUM_THREAD 6
 typedef struct {
 	int base;
 	int to;
@@ -108,7 +108,7 @@ double testmain(int min, int max)
 	double elapsedtime = 0;
 	int result = 0;
 	int i = 0;
-	const BOOL threadAllowed = TRUE;
+	const BOOL threadAllowed = FALSE;
 	g_allPrimes = 0;
 	beforetime = clock();
 	if (threadAllowed)
@@ -116,7 +116,10 @@ double testmain(int min, int max)
 		result = useThread(min, max);
 	}
 	else
+	{
 		result = getNumberOfPrime(min, max);
+		g_allPrimes = result;
+	}
 	currenttime = clock();
 	elapsedtime = (double)(currenttime - beforetime) / CLOCKS_PER_SEC;
 	
