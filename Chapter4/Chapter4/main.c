@@ -108,7 +108,7 @@ double testmain(int min, int max)
 	double elapsedtime = 0;
 	int result = 0;
 	int i = 0;
-	const BOOL threadAllowed = FALSE;
+	const BOOL threadAllowed = TRUE;
 	g_allPrimes = 0;
 	beforetime = clock();
 	if (threadAllowed)
