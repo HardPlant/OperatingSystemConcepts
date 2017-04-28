@@ -3,108 +3,88 @@
 void error(char* msg)
 {
 	fprintf(stderr, msg);
-	return -1;
 }
-Node* makeNode(int data)
-{
-	Node* toMake = (Node*)malloc(sizeof(Node));
-	toMake->item = data;
-	toMake->link = NULL;
-	return toMake;
-}
-
-Queue* makeQueue()
+Queue* makeQueue(int size)
 {
 	Queue* toMake = (Queue*)malloc(sizeof(Queue));
-	toMake->head = NULL;
-	toMake->tail = NULL;
-	toMake->length = -1;
+	toMake->index = 0;
 	return toMake;
 }
 int isEmpty(Queue* dest)
 {
-	if (dest->head == NULL) return 1;
+	if (dest->index <=0) return 1;
+	else return 0;
+}
+int isFull(Queue* dest)
+{
+	if (dest->index >= MAXSIZE) return 1;
 	else return 0;
 }
 int enqueue(Queue* dest, ElementType data)
 {
-	Node* src = makeNode(data);
-	if (src == NULL)
-		error("메모리 할당 불가");
-	if (isEmpty(dest))
+	
+	if (isFull(dest))
 	{
-		dest->head = src;
-		dest->tail = src;
+		error("enqueue: 큐 가득 참\n");
+		return 0;
 	}
 	else
 	{
-		dest->tail->link = src;
-		dest->tail = src;
+		dest->queue[dest->index++]= data;
 	}
-	dest->length++;
+	return 1;
 }
 ElementType peek(Queue* dest)
 {
 	if (isEmpty(dest))
 	{
-		error("큐가 비어 있음");
+		error("peek: 큐가 비어 있음");
 		return -1;
 	}
-	return dest->head->item;
+	return dest->queue[0];
 }
 ElementType dequeue(Queue* dest)
 {
-	Node* toPop;
 	ElementType result;
+	int i;
 	if (isEmpty(dest))
-		error("큐가 비어 있음");
+		error("dequeue: 큐가 비어 있음");
 	else
 	{
-		toPop = dest->head;
-		result = toPop->item;
-		dest->head = dest->head->link;
-		if (dest->head == NULL)
-			dest->tail = NULL;
-		free(toPop);
-		dest->length--;
+		result = dest->queue[0];
+		for (i = 0; i < dest->index-1 ; i++) {
+			dest->queue[i] = dest->queue[i + 1];
+		}
+		dest->index--;
 		return result;
 	}
 }
 void destroy(Queue* dest)
 {
-	while (isEmpty(dest))
-		dequeue(dest);
 	free(dest);
 }
 void printQueue(Queue* dest)
 {
-	if (isEmpty(dest)) return -1;
-	Node* current = dest->head;
-	while (current != NULL)
+	int i = 0;
+	if (isEmpty(dest));
+	ElementType* current = dest->queue;
+	for(i=0;i<dest->index;i++)
 	{
-		printf("%d ", current->item);
-		current = current->link;
+		printf("%d ", dest->queue[i]);
 	}
 	printf("\n");
 }
-ElementType at(Queue* dest, int index)
+ElementType* at(Queue* dest, int index)
 {
-	Node* current;
-	int i;
 	if (isEmpty(dest))
 	{
-		error("빈 큐");
-		return -1;
+		error("at: 빈 큐");
+		return NULL;
 	}
-	if (index > dest->length + 1)
+	if (index > dest->index + 1)
 	{
-		error("큐 범위 초과");
-		return -1;
+		error("at: 큐 범위 초과");
+		return NULL;
 	}
-	if (index == dest->length) return dest->tail->item;
-	current = dest->head;
-	for (i = 0; i < index; i++)
-		if(current->link != NULL)
-			current = current->link;
-	return current->item;
+	return &(dest->queue[index]);
 }

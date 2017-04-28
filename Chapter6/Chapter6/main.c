@@ -12,8 +12,8 @@ int pro;
 int count;
 int in;
 int out;
-int ret_min;
-int ret_max;
+int ret_min = INT_MAX;
+int ret_max = INT_MIN;
 double ret_avg;
 double ret_std;
 Queue* intQueue;
@@ -36,6 +36,7 @@ DWORD WINAPI ProducerThreadFunc(LPVOID lpParam)
 		randomint = rand() % 4096;
 		if(enqueue(intQueue, randomint))
 			pro++;
+		printf("pro: %d\n", pro);
 	}
 	return EXIT_SUCCESS;
 }
@@ -48,95 +49,55 @@ typedef struct {
 DWORD WINAPI ConsumerThreadFunc(LPVOID lpParam)
 {
 	CThreadArgs* argv = lpParam;
-	argv->ThreadType = MIN;
 	int con_i= 0;
+
 	int (*funcToUse)(int) = getMin;
 	if (argv->ThreadType == MIN) funcToUse = getMin;
 	if (argv->ThreadType == MAX) funcToUse = getMax;
 	if (argv->ThreadType == AVG) funcToUse = getAvg;
 	if (argv->ThreadType == STDEV) funcToUse = getStDev;
-	
 	while (con_i < pro && con_i < nSize)
 	{
-		funcToUse(con_i);
+		int popped = dequeue(intQueue);
+		funcToUse(popped);
 		con_i++;
 		if (con_i >= pro) Sleep(100);
 	}
 
 	return EXIT_SUCCESS;
 }
-int getMin(int index)
+int getMin(int popped)
 {
-	static int currentIndex = 0;
-	if (currentIndex == index) EXIT_SUCCESS;
+	if (popped < ret_min)
+		ret_min = popped;
 
-	int i = 0;
-
-	int *current = at(intQueue, currentIndex);
-	int currentMin = *current;
-	for (i = currentIndex; i < index; i++, current++)
-		if (*current < currentMin)
-			currentMin = *current;
-
-	ret_max = currentMin;
-	currentIndex = index;
-
+	printf("min: %d\n", ret_min);
 	return EXIT_SUCCESS;
 }
-int getMax(int index)
+int getMax(int popped)
 {
-	static int currentIndex = 0;
-	if(currentIndex == index) EXIT_SUCCESS;
-
-	int i = 0;
-
-	int *current = at(intQueue, currentIndex);
-	int currentMax = *current;
-	for (i = currentIndex; i < index; i++, current++)
-		if (*current > currentMax)
-			currentMax = *current;
-
-	ret_max = currentMax;
-	currentIndex = index;
-
+	if (popped > ret_max)
+		ret_max = popped;
+	
 	return EXIT_SUCCESS;
 }
 int avgUsing;
-int getAvg(int index)
+int getAvg(int popped)
 {
 	static int currentIndex = 0;
 	static long long sum = 0;
-	if (currentIndex == index) EXIT_SUCCESS;
-	avgUsing = TRUE;
-
-	int i = 0;
-	int *current = at(intQueue, currentIndex);
-	for (i = currentIndex; i < index; i++, current++)
-			sum += *current;
-
+	sum += popped;
+	currentIndex++;
 	ret_avg = (double)sum / currentIndex;
-	currentIndex = index;
 
-	avgUsing = FALSE;
+	printf("avg: %lf\n", ret_avg);
 	return EXIT_SUCCESS;
 }
-int getStDev(int index)
+int getStDev(int popped)
 {
-	static int currentIndex = 0;
-	static long double sum = 0;
-	if (currentIndex == index || avgUsing == TRUE) EXIT_SUCCESS;
-	double avg = ret_avg;
-
-	int i = 0;
-	int *current = at(intQueue, 0);
-	for (i = 0; i < index; i++, current++)
-		sum += pow((*current)-ret_avg,2);
-
-	ret_avg = sum / currentIndex;
-	currentIndex = index;
-
 	return EXIT_SUCCESS;
 }
+
 int main(int argc, char* argv[])
 {// main thread
 	int i = 0;
@@ -147,7 +108,9 @@ int main(int argc, char* argv[])
 	CThreadArgs* currentCArgs;
 
 	printf("정수의 개수 n, 큐의 크기 q:");
-	scanf("%d %d",&n, &q);
+	//scanf("%d %d",&n, &q);
+	n = 100000;
+	q = 20000;
 	nSize = n;
 	intQueue = makeQueue(q);
 
@@ -162,8 +125,8 @@ int main(int argc, char* argv[])
 			ThreadHandles[i] = CreateThread(NULL
 				, 0
 				, (LPTHREAD_START_ROUTINE)ProducerThreadFunc
-				, NULL
 				, argvs[i]
+				, 0
 				, NULL);
 		}
 		else
@@ -171,12 +134,11 @@ int main(int argc, char* argv[])
 			argvs[i] = malloc(sizeof(CThreadArgs));
 			currentCArgs = argvs[i];
 			currentCArgs->ThreadType = i/2; // 0 2 4 6 -> 0 1 2 3
-
 			ThreadHandles[i] = CreateThread(NULL
 				, 0
 				, (LPTHREAD_START_ROUTINE)ConsumerThreadFunc
-				, NULL
 				, argvs[i]
+				, 0
 				, NULL);
 		}
 	}
@@ -186,7 +148,7 @@ int main(int argc, char* argv[])
 		CloseHandle(ThreadHandles[i]);
 			free(argvs[i]);
 	}
-	printf("최소:%d 최대:%d 평균:%d 표준편차%d\n"
+	printf("최소:%d 최대:%d 평균:%lf 표준편차:%lf\n"
 		,ret_min, ret_max, ret_avg, ret_std);
 	return 0;
 }
