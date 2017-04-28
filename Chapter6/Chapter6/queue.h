@@ -5,6 +5,7 @@ typedef struct node {
 	struct node* link;
 }Node;
 typedef struct queue {
+	int queue[20000];
 	struct node* head;
 	struct node* tail;
 	int length;
@@ -13,7 +14,7 @@ typedef struct queue {
 Node* makeNode(int data);
 Queue* makeQueue();
 int isEmpty(Queue* dest);
-void enqueue(Queue* dest, ElementType data);
+int enqueue(Queue* dest, ElementType data);
 ElementType peek(Queue* dest);
 void destroy(Queue* dest);
 ElementType dequeue(Queue* dest);

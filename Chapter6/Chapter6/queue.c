@@ -13,7 +13,7 @@ Node* makeNode(int data)
 	return toMake;
 }
 
-Queue* makeQueue(int size)
+Queue* makeQueue()
 {
 	Queue* toMake = (Queue*)malloc(sizeof(Queue));
 	toMake->head = NULL;
@@ -26,7 +26,7 @@ int isEmpty(Queue* dest)
 	if (dest->head == NULL) return 1;
 	else return 0;
 }
-void enqueue(Queue* dest, ElementType data)
+int enqueue(Queue* dest, ElementType data)
 {
 	Node* src = makeNode(data);
 	if (src == NULL)
