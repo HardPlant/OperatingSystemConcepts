@@ -64,7 +64,7 @@ ElementType dequeue(Queue* dest)
 		result = toPop->item;
 		dest->head = dest->head->link;
 		if (dest->head == NULL)
-			dest->tail == NULL;
+			dest->tail = NULL;
 		free(toPop);
 		dest->length--;
 		return result;

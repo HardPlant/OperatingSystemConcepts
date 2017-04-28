@@ -1,11 +1,12 @@
 #pragma once
+#
 typedef int ElementType;
 typedef struct node {
 	int item;
 	struct node* link;
 }Node;
-typedef struct queue {
-	int queue[20000];
+
+typedef struct {
 	struct node* head;
 	struct node* tail;
 	int length;

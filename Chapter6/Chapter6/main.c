@@ -123,7 +123,7 @@ int getAvg(int index)
 int getStDev(int index)
 {
 	static int currentIndex = 0;
-	static long long sum = 0;
+	static long double sum = 0;
 	if (currentIndex == index || avgUsing == TRUE) EXIT_SUCCESS;
 	double avg = ret_avg;
 
