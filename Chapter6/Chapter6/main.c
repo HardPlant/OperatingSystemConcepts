@@ -1,152 +1,198 @@
-#define _CRT_SECURE_NO_WARNINGS
-#include <stdio.h>
-#include <windows.h>
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
-#include "queue.h"
-#define THREADS 8
-//**inter-threads globals
-int nSize;
-int pro;
-int count;
-int in;
-int out;
-int ret_min = INT_MAX;
-int ret_max = INT_MIN;
-double ret_avg;
-double ret_std;
-Queue* intQueue;
-//*******//
-int getMin(int);
-int getMax(int);
-int getAvg(int);
-int getStDev(int);
+#include "main.h"
+int ThreadIsEmpty(Queue* queue) {
 
-typedef struct {
-	int i;
-} PThreadArgs;
+}
+int ThreadIsFull(Queue* queue) {
+
+}
+
+int ThreadEnqueue(Queue* queue, int input) {
+	while (isFull(queue)) Sleep(1);
+	wait(&in);
+	enqueue(queue, input);
+	signal(&out);
+	//if (isFull(queue)) signal(&out);
+	return 1;
+}
+int ThreadDequeue(Queue* queue, int* con_i) {
+	while (isEmpty(queue)) Sleep(1);
+	wait(&out);
+	printf("queue->%d, count: %d\n", queue->index, count);
+	int result;
+	
+	if (count > 0) {
+		count--;
+		result = peek(queue);
+	}
+	else {
+		count = THREADS / 2;
+		result = dequeue(queue);
+	}
+	
+	(*con_i)++;
+	signal(&in);
+	//if (isEmpty(queue)) signal(&in);
+	if (result < 0) return 1;
+	return result;
+}
 DWORD WINAPI ProducerThreadFunc(LPVOID lpParam)
 {
-	PThreadArgs* argv = lpParam;
 	int randomint;
-	while (pro < nSize)
+	while (pro < n)
 	{
 		srand((unsigned int)time(NULL));
-		randomint = rand() % 4096;
-		if(enqueue(intQueue, randomint))
+		randomint = pro;
+		//randomint = rand() % 4096;
+		if (ThreadEnqueue(intQueue, randomint))
+		{
 			pro++;
-		printf("pro: %d\n", pro);
+			printf("pro: %d\n", pro);
+		}
+		Sleep(1);
 	}
 	return EXIT_SUCCESS;
 }
 
-typedef struct {
-	enum { MIN,MAX,AVG,STDEV }  ThreadType;
-
-} CThreadArgs;
-
-DWORD WINAPI ConsumerThreadFunc(LPVOID lpParam)
+DWORD WINAPI getMin_ConsumerThreadFunc(LPVOID lpParam)
 {
-	CThreadArgs* argv = lpParam;
 	int con_i= 0;
-
-	int (*funcToUse)(int) = getMin;
-	if (argv->ThreadType == MIN) funcToUse = getMin;
-	if (argv->ThreadType == MAX) funcToUse = getMax;
-	if (argv->ThreadType == AVG) funcToUse = getAvg;
-	if (argv->ThreadType == STDEV) funcToUse = getStDev;
-	while (con_i < pro && con_i < nSize)
+	int popped;
+	while (con_i >= pro) Sleep(1);
+	while (con_i < pro && con_i < n)
 	{
-		int popped = dequeue(intQueue);
-		funcToUse(popped);
-		con_i++;
-		if (con_i >= pro) Sleep(100);
+		popped = ThreadDequeue(intQueue, &con_i);
+		if (popped < ret_min)
+		{
+			ret_min = popped;
+
+		}
+		printf("con_i:%d, min: %d\n", con_i,ret_min);
+		Sleep(1);
 	}
 
 	return EXIT_SUCCESS;
 }
-int getMin(int popped)
+DWORD WINAPI getMax_ConsumerThreadFunc(LPVOID lpParam)
 {
-	if (popped < ret_min)
-		ret_min = popped;
+	int con_i = 0;
+	int popped;
+	while (con_i >= pro) Sleep(1);
+	while (con_i < pro && con_i < n)
+	{
+		popped = ThreadDequeue(intQueue, &con_i);
 
-	printf("min: %d\n", ret_min);
-	return EXIT_SUCCESS;
-}
-int getMax(int popped)
-{
-	if (popped > ret_max)
-		ret_max = popped;
-	
-	return EXIT_SUCCESS;
-}
-int avgUsing;
-int getAvg(int popped)
-{
-	static int currentIndex = 0;
-	static long long sum = 0;
-	sum += popped;
-	currentIndex++;
-	ret_avg = (double)sum / currentIndex;
+		if (popped > ret_max)
+		{
+			ret_max = popped;
+		}
+		printf("con_i:%d, max: %d\n", con_i, ret_max);
+		Sleep(1);
+	}
 
-	printf("avg: %lf\n", ret_avg);
 	return EXIT_SUCCESS;
 }
-int getStDev(int popped)
+int avgUsing = 0;
+DWORD WINAPI getAvg_ConsumerThreadFunc(LPVOID lpParam)
 {
+	int con_i = 0;
+	int popped;
+	while (con_i >= pro) Sleep(1);
+	while (con_i < pro && con_i < n)
+	{
+		popped = ThreadDequeue(intQueue, &con_i);
+
+		static int currentIndex = 0;
+		static long double sum = 0;
+		sum += popped;
+		currentIndex++;
+		ret_avg = sum / currentIndex;
+		signal(&avgUsing);
+		printf("con_i:%d, avg: %lf\n", con_i, ret_avg);
+		Sleep(1);
+	}
+
+	return EXIT_SUCCESS;
+}
+DWORD WINAPI getStdev_ConsumerThreadFunc(LPVOID lpParam)
+{
+	int con_i = 0;
+	int popped;
+	while (con_i >= pro) Sleep(1);
+	while (con_i < pro && con_i < n)
+	{
+		popped = ThreadDequeue(intQueue, &con_i);
+		wait(&avgUsing);
+
+		static long double mean = 0;
+		static long double m2 = 0;
+		static long double delta = 0;
+		static long double delta2 = 0;
+		static long double total;
+		delta = popped - mean; // Welford's algorithm
+		mean += delta / con_i;
+		delta2 = popped - mean;
+		m2 = +delta*delta2;
+		if (con_i == 1) continue;
+		total = m2 / (con_i - 1);
+
+		ret_std = total;
+		printf("con_i:%d, stdev: %lf\n", con_i, ret_std);
+		Sleep(1);
+	}
+
 	return EXIT_SUCCESS;
 }
 
 int main(int argc, char* argv[])
 {// main thread
 	int i = 0;
-	int n, q;
+	int q;
 	HANDLE ThreadHandles[THREADS];
-	LPVOID argvs[8];
-	PThreadArgs* currentPArgs;
-	CThreadArgs* currentCArgs;
 
 	printf("정수의 개수 n, 큐의 크기 q:");
 	//scanf("%d %d",&n, &q);
-	n = 100000;
-	q = 20000;
-	nSize = n;
+	n = 100;
+	q = 30;
 	intQueue = makeQueue(q);
 
-	for (i = 0; i < THREADS; i++)
+	for (i = 0; i < 4; i++)
 	{
-		if (i % 2 != 0)
-		{
-			argvs[i] = malloc(sizeof(PThreadArgs));
-			currentPArgs = argvs[i];
-			currentPArgs->i = 0;
-
-			ThreadHandles[i] = CreateThread(NULL
-				, 0
-				, (LPTHREAD_START_ROUTINE)ProducerThreadFunc
-				, argvs[i]
-				, 0
-				, NULL);
-		}
-		else
-		{
-			argvs[i] = malloc(sizeof(CThreadArgs));
-			currentCArgs = argvs[i];
-			currentCArgs->ThreadType = i/2; // 0 2 4 6 -> 0 1 2 3
-			ThreadHandles[i] = CreateThread(NULL
-				, 0
-				, (LPTHREAD_START_ROUTINE)ConsumerThreadFunc
-				, argvs[i]
-				, 0
-				, NULL);
-		}
+	ThreadHandles[i] = CreateThread(NULL
+		, 0
+		, (LPTHREAD_START_ROUTINE)ProducerThreadFunc
+		, NULL
+		, 0
+		, NULL);
 	}
+
+	ThreadHandles[4] = CreateThread(NULL
+		, 0
+		, (LPTHREAD_START_ROUTINE)getMax_ConsumerThreadFunc
+		, NULL
+		, 0
+		, NULL);
+	ThreadHandles[5] = CreateThread(NULL
+		, 0
+		, (LPTHREAD_START_ROUTINE)getMin_ConsumerThreadFunc
+		, NULL
+		, 0
+		, NULL);
+	ThreadHandles[6] = CreateThread(NULL
+		, 0
+		, (LPTHREAD_START_ROUTINE)getAvg_ConsumerThreadFunc
+		, NULL
+		, 0
+		, NULL);
+	ThreadHandles[7] = CreateThread(NULL
+		, 0
+		, (LPTHREAD_START_ROUTINE)getStdev_ConsumerThreadFunc
+		, NULL
+		, 0
+		, NULL);
 	WaitForMultipleObjects(THREADS, ThreadHandles, TRUE, INFINITE);
 	for (i = 0; i < THREADS; i++)
 	{
 		CloseHandle(ThreadHandles[i]);
-			free(argvs[i]);
 	}
 	printf("최소:%d 최대:%d 평균:%lf 표준편차:%lf\n"
 		,ret_min, ret_max, ret_avg, ret_std);

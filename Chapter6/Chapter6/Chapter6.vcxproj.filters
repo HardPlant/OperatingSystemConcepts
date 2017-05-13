@@ -21,9 +21,24 @@
     <ClCompile Include="queue.c">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="semaphore.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="mutex.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="queue.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="semaphore.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="main.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="mutex.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

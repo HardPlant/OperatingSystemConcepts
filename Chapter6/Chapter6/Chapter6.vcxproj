@@ -147,10 +147,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.c" />
+    <ClCompile Include="mutex.c" />
     <ClCompile Include="queue.c" />
+    <ClCompile Include="semaphore.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="main.h" />
+    <ClInclude Include="mutex.h" />
     <ClInclude Include="queue.h" />
+    <ClInclude Include="semaphore.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

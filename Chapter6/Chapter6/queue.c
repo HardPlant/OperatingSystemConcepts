@@ -8,6 +8,7 @@ Queue* makeQueue(int size)
 {
 	Queue* toMake = (Queue*)malloc(sizeof(Queue));
 	toMake->index = 0;
+	toMake->size = size;
 	return toMake;
 }
 int isEmpty(Queue* dest)
@@ -17,7 +18,7 @@ int isEmpty(Queue* dest)
 }
 int isFull(Queue* dest)
 {
-	if (dest->index >= MAXSIZE) return 1;
+	if (dest->index > dest->size) return 1;
 	else return 0;
 }
 int enqueue(Queue* dest, ElementType data)

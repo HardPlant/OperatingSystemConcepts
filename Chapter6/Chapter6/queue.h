@@ -6,9 +6,11 @@ typedef int ElementType;
 typedef struct {
 	int index;
 	int queue[MAXSIZE];
+	int size;
 }Queue;
 
 Queue* makeQueue(int size);
+int isFull(Queue* dest);
 int isEmpty(Queue* dest);
 int enqueue(Queue* dest, ElementType data);
 ElementType peek(Queue* dest);
