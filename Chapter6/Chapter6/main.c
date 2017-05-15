@@ -1,72 +1,87 @@
 #include "main.h"
 int ThreadIsEmpty(Queue* queue) {
-
+	wait(&in);
+	wait(&out);
+	int result = isEmpty(queue);
+	signal(&out);
+	signal(&in);
+	return result;
 }
 int ThreadIsFull(Queue* queue) {
-
-}
-
-int ThreadEnqueue(Queue* queue, int input) {
-	while (isFull(queue)) Sleep(1);
 	wait(&in);
-	enqueue(queue, input);
-	signal(&out);
-	//if (isFull(queue)) signal(&out);
-	return 1;
-}
-int ThreadDequeue(Queue* queue, int* con_i) {
-	while (isEmpty(queue)) Sleep(1);
 	wait(&out);
-	printf("queue->%d, count: %d\n", queue->index, count);
+	int result = isFull(queue);
+	signal(&out);
+	signal(&in);
+	return result;
+}
+
+int ThreadEnqueue(Queue* queue, int input, int pro) {
 	int result;
-	
-	if (count > 0) {
-		count--;
+	if (n < pro) return 0;
+	while (ThreadIsFull(queue)) Sleep(1);
+	wait(&in);
+	result = enqueue(queue, input);
+	signal(&in);
+	return result;
+}
+int ThreadDequeue(Queue* queue, int* con_i, int turn) {
+	int result;
+	while (ThreadIsEmpty(queue)) {Sleep(1);}
+	wait(&out);
+	(*con_i)++;
+	if (turn != ((THREADS / 2) - 1)) {
+		InterlockedIncrement(&count);
+		
 		result = peek(queue);
 	}
 	else {
-		count = THREADS / 2;
+		count = 0;
 		result = dequeue(queue);
 	}
-	
-	(*con_i)++;
-	signal(&in);
-	//if (isEmpty(queue)) signal(&in);
-	if (result < 0) return 1;
+	signal(&out);
+	if (result < 0) {
+		printf("err!\n");
+		return 1;
+	}
 	return result;
 }
 DWORD WINAPI ProducerThreadFunc(LPVOID lpParam)
 {
 	int randomint;
-	while (pro < n)
+	while (1)
 	{
 		srand((unsigned int)time(NULL));
 		randomint = pro;
 		//randomint = rand() % 4096;
-		if (ThreadEnqueue(intQueue, randomint))
-		{
+//		printf("try to Produce : ");
+		if (ThreadEnqueue(intQueue, randomint, pro)){
 			pro++;
-			printf("pro: %d\n", pro);
+//			printf("pro: %d\n", pro);	
 		}
-		Sleep(1);
+		if(n < pro)
+		{
+//			printf("Proc End\n");
+			return EXIT_SUCCESS;
+		}
 	}
-	return EXIT_SUCCESS;
+	Sleep(1);
 }
 
 DWORD WINAPI getMin_ConsumerThreadFunc(LPVOID lpParam)
 {
 	int con_i= 0;
 	int popped;
-	while (con_i >= pro) Sleep(1);
-	while (con_i < pro && con_i < n)
+	while (1)
 	{
-		popped = ThreadDequeue(intQueue, &con_i);
+		while (con_i > pro) Sleep(1);
+		while (count != 0) Sleep(1);
+		popped = ThreadDequeue(intQueue, &con_i, 0);
 		if (popped < ret_min)
 		{
 			ret_min = popped;
-
 		}
-		printf("con_i:%d, min: %d\n", con_i,ret_min);
+		if (con_i >= n) return EXIT_SUCCESS;
 		Sleep(1);
 	}
 
@@ -76,73 +91,56 @@ DWORD WINAPI getMax_ConsumerThreadFunc(LPVOID lpParam)
 {
 	int con_i = 0;
 	int popped;
-	while (con_i >= pro) Sleep(1);
-	while (con_i < pro && con_i < n)
+	while (1)
 	{
-		popped = ThreadDequeue(intQueue, &con_i);
+		while (con_i > pro) Sleep(1);
+		while (count != 1) Sleep(1);
+		popped = ThreadDequeue(intQueue, &con_i, 1);
 
 		if (popped > ret_max)
 		{
 			ret_max = popped;
 		}
-		printf("con_i:%d, max: %d\n", con_i, ret_max);
+		if (con_i >= n) return EXIT_SUCCESS;
 		Sleep(1);
 	}
-
-	return EXIT_SUCCESS;
 }
-int avgUsing = 0;
 DWORD WINAPI getAvg_ConsumerThreadFunc(LPVOID lpParam)
 {
 	int con_i = 0;
 	int popped;
-	while (con_i >= pro) Sleep(1);
-	while (con_i < pro && con_i < n)
+	while (1)
 	{
-		popped = ThreadDequeue(intQueue, &con_i);
-
-		static int currentIndex = 0;
-		static long double sum = 0;
-		sum += popped;
-		currentIndex++;
-		ret_avg = sum / currentIndex;
+		while (con_i > pro) Sleep(1);
+		while (count != 3) Sleep(1);
+		popped = ThreadDequeue(intQueue, &con_i, 3);
+//		printf("popped : %d, ",popped);
+		delta = popped - ret_avg;
+		ret_avg += delta / con_i;
 		signal(&avgUsing);
-		printf("con_i:%d, avg: %lf\n", con_i, ret_avg);
+		if (con_i >= n) return EXIT_SUCCESS;
 		Sleep(1);
 	}
-
-	return EXIT_SUCCESS;
 }
 DWORD WINAPI getStdev_ConsumerThreadFunc(LPVOID lpParam)
 {
 	int con_i = 0;
 	int popped;
-	while (con_i >= pro) Sleep(1);
-	while (con_i < pro && con_i < n)
+	while (1)
 	{
-		popped = ThreadDequeue(intQueue, &con_i);
-		wait(&avgUsing);
-
-		static long double mean = 0;
-		static long double m2 = 0;
-		static long double delta = 0;
-		static long double delta2 = 0;
-		static long double total;
-		delta = popped - mean; // Welford's algorithm
-		mean += delta / con_i;
-		delta2 = popped - mean;
-		m2 = +delta*delta2;
+		while (con_i > pro) Sleep(1);
+		while (count != 2) Sleep(1);
+		popped = ThreadDequeue(intQueue, &con_i,2);
+		static double m2 = 0; // Welford's algorithm
 		if (con_i == 1) continue;
-		total = m2 / (con_i - 1);
-
-		ret_std = total;
-		printf("con_i:%d, stdev: %lf\n", con_i, ret_std);
+		long double delta2 = popped - ret_avg;
+		m2 += delta*delta2;
+		ret_std = sqrt(m2/(con_i - 1));
+		printf("con_i:%d\n", con_i);
+		if (con_i >= n) return EXIT_SUCCESS;
 		Sleep(1);
 	}
-
-	return EXIT_SUCCESS;
 }
-
 int main(int argc, char* argv[])
 {// main thread
 	int i = 0;
@@ -151,10 +149,10 @@ int main(int argc, char* argv[])
 
 	printf("정수의 개수 n, 큐의 크기 q:");
 	//scanf("%d %d",&n, &q);
+	printf("\n");
 	n = 100;
-	q = 30;
+	q = 4;
 	intQueue = makeQueue(q);
-
 	for (i = 0; i < 4; i++)
 	{
 	ThreadHandles[i] = CreateThread(NULL
@@ -194,6 +192,7 @@ int main(int argc, char* argv[])
 	{
 		CloseHandle(ThreadHandles[i]);
 	}
+	printQueue(intQueue);
 	printf("최소:%d 최대:%d 평균:%lf 표준편차:%lf\n"
 		,ret_min, ret_max, ret_avg, ret_std);
 	return 0;

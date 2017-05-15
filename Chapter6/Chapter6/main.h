@@ -12,15 +12,18 @@
 //**inter-threads globals
 int n;
 int pro;
-int count;
-int in;
-int out = 0;
+LONG count;
+LONG in;
+LONG out = 0;
+LONG avgUsing = 0;
 int ret_min = INT_MAX;
 int ret_max = INT_MIN;
 long double ret_avg;
 long double ret_std;
+long double delta;
 Queue* intQueue;
 //*******//
+int initSemaphores();
 int getMin(int);
 int getMax(int);
 int getAvg(int);

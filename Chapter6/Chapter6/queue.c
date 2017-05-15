@@ -40,7 +40,7 @@ ElementType peek(Queue* dest)
 	if (isEmpty(dest))
 	{
 		error("peek: 큐가 비어 있음");
-		return -1;
+		return 0;
 	}
 	return dest->queue[0];
 }
@@ -49,7 +49,10 @@ ElementType dequeue(Queue* dest)
 	ElementType result;
 	int i;
 	if (isEmpty(dest))
+	{
 		error("dequeue: 큐가 비어 있음");
+		return 0;
+	}
 	else
 	{
 		result = dest->queue[0];

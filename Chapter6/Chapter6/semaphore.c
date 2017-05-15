@@ -1,9 +1,13 @@
 #include "semaphore.h"
+int test_and_set() {
 
-int wait(int* smp_S) {
-	while (smp_S <= 0);
-	(*smp_S)--;
 }
-int signal(int* smp_S) {
-	(*smp_S)++;
+int wait(LONG* sem) {
+	while (sem <= 0) Sleep(10);
+	InterlockedDecrement(sem);
+	return 0;
+}
+int signal(LONG* sem) {
+	InterlockedIncrement(sem);
+	return 0;
 }
