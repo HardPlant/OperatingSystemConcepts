@@ -1,7 +1,4 @@
 #include "semaphore.h"
-int test_and_set() {
-
-}
 int wait(LONG* sem) {
 	while (sem <= 0) Sleep(10);
 	InterlockedDecrement(sem);

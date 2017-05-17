@@ -1,8 +1,9 @@
 #include "queue.h"
 #include <stdio.h>
+#define DEBUG 0
 void error(char* msg)
 {
-	fprintf(stderr, msg);
+	if (DEBUG) fprintf(stderr, msg);
 }
 Queue* makeQueue(int size)
 {
