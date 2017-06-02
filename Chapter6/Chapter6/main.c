@@ -19,7 +19,7 @@ int ThreadIsFull(Queue* queue) {
 int ThreadEnqueue(Queue* queue, int input) {
 	int result = 0;
 	if (n < pro) return 0;
-	if (ThreadIsFull(queue));
+	if (ThreadIsFull(queue)) return 0;
 	wait(&in);
 	if (result = enqueue(queue, input))
 	{
@@ -32,7 +32,6 @@ int ThreadDequeue(Queue* queue, int* con_i, int turn) {
 	int result;
 	if (ThreadIsEmpty(queue)) return 0;
 	wait(&out);
-	(*con_i)++;
 	if (turn != 3) {
 		InterlockedIncrement(&count);
 		
@@ -44,8 +43,9 @@ int ThreadDequeue(Queue* queue, int* con_i, int turn) {
 	}
 	signal(&out);
 	if (result < 0) {
-		return 1;
+		return 0;
 	}
+	(*con_i)++;
 	return result;
 }
 DWORD WINAPI ProducerThreadFunc(LPVOID lpParam)
@@ -89,7 +89,7 @@ DWORD WINAPI ConsumerThreadFunc(LPVOID lpParam)
 		while (con_i > pro) Sleep(1);
 		if (count == turn) {
 			popped = ThreadDequeue(intQueue, &con_i, turn);
-			func(&popped, &con_i);
+			if(popped > 0) func(&popped, &con_i);
 		}
 		if (con_i >= n) return EXIT_SUCCESS;
 		Sleep(1);
